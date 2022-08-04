@@ -1,0 +1,110 @@
+#      ~last part~
+library(tidyverse)
+library(data.table)
+
+
+i<-1
+A<-numeric()              
+a<-numeric()
+time_intercept<-numeric()
+
+B<-numeric()
+b<-numeric()
+time_log<-numeric()
+mean_log<-numeric()
+
+for (i in 1:length(df_list_log)) {
+ #create ∆a 
+     A<-c(A, df_list_log[[i]][24,2])
+     a<-c(a, df_list_log[[i]][1,2])
+     
+     time_intercept<- (A-a)
+     
+     #create ∆b 
+     B<-c(B, df_list_log[[i]][24,7])
+     b<-c(b, df_list_log[[i]][1,7])
+     
+     time_log<- (B-b)
+   
+     #mean 2015-1992  
+  mean_log<- c(mean_log,(df_list_log[[i]][24,7]+df_list_log[[i]][1,7])/2)         
+     
+  i<-i+1
+}
+
+
+
+#x
+
+n<-1
+X<-list()                
+x<-list()
+time_x<-list()
+mean_x<-list()
+
+for (i in 1:length(pairs)) {
+  
+  year_one<-which(data$date==2015)
+  year_two<-which(data$date==1992)
+  
+  X[[n]]<-log(pairs[[i]][1][[f]][c(year_one)])
+  x[[n]]<-log(pairs[[i]][1][[f]][c(year_two)])
+  
+  X[[n]]<- X[[n]][!is.na(X[[n]])]
+  x[[n]]<- x[[n]][!is.na(x[[n]])]
+  
+  X[[n]]<-mean(X[[n]])
+  x[[n]]<-mean(x[[n]])
+  
+  
+  time_x[[n]]<- (X[[n]]-x[[n]])
+ 
+  mean_x[[n]]<-c((X[[n]]+x[[n]])/2)
+n<-n+1
+  }
+
+
+
+X<- unlist(X, use.names = FALSE)
+x<- unlist(x,use.names = FALSE)
+mean_x<- unlist(mean_x, use.names = FALSE)
+time_x<- unlist(time_x, use.names = FALSE)
+
+traceback()
+
+
+
+#FUNCTIONAL DYNAMIC DECOMPOSITION
+
+function_fdd<- (time_intercept+(time_log*mean_x))
+
+driver<- (mean_log*time_x)
+
+
+final_res<-list()
+final_res<- (function_fdd+driver)
+
+#verification ∆Y
+
+Y<-list()
+y<-list()
+y_final<-list()
+n<-1
+for (i in 1:length(pairs)) {
+  
+Y[[n]]<-log(pairs[[i]][2][[f]][c(year_one)])
+y[[n]]<-log(pairs[[i]][2][[f]][c(year_two)])
+
+Y[[n]]<- Y[[n]][!is.na(Y[[n]])]
+y[[n]]<- y[[n]][!is.na(y[[n]])]
+
+Y[[n]]<-mean(Y[[n]])
+y[[n]]<-mean(y[[n]])
+
+y_final[[n]]<-(Y[[n]]-y[[n]])
+
+n<-n+1
+}
+
+
+y_final<-unlist(y_final,use.names = FALSE)
